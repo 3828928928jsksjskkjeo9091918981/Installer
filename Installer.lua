@@ -1,8 +1,7 @@
 local lib = loadstring(game:HttpGet("https://raw.githubusercontent.com/REDzHUB/RedzLibV5/main/Source.Lua"))()
 local cloneref = cloneref or function(instance) return instance end
-local baseDirectory = (shared.VapePrivate and "vapeprivate")
-local httpservice = cloneref(game.GetService(game, 'HttpService'))
-
+local baseDirectory = "vape"
+local httpservice = cloneref(game:GetService('HttpService'))
 
 local hm = "Waiting"
 local prog = 0
@@ -13,10 +12,11 @@ local function WriteFiles(link) -- main, libraries, games, assets
 	    if link ~= "main" then gitfiles = "/"..link.."/" end
 	    if link == "games" then gitfiles = "/CustomModules/" end
 	    if link == "libraries" then gitfiles = "/Libraries/" end
-	    API.New("files"..files,"GET",true)
-	    for i,v in API.Get("files") do
+	    local url = "https://raw.githubusercontent.com/starsdotspace/Installer/main"..gitfiles
+	    local response = httpservice:JSONDecode(game:HttpGet("https://api.github.com/repos/starsdotspace/Installer/contents"..gitfiles))
+	    for _, v in pairs(response) do
 	        pcall(function() 
-	            writefile(baseDirectory..gitfiles..v, game:HttpGet("https://raw.githubusercontent.com/starsdotspace/Installer/main"..gitfiles..v, true))
+	            writefile(baseDirectory..gitfiles..v.name, game:HttpGet(url..v.name, true))
 	            task.wait(0.01)
 	            prog = prog + 1
 	        end)
@@ -27,6 +27,7 @@ local function WriteFiles(link) -- main, libraries, games, assets
 		error(res)
 	end
 end
+
 local Window = lib:MakeWindow({
   Title = "Galaxyguard Installer",
   SubTitle = ""
@@ -64,14 +65,14 @@ butt = Tab1:AddButton({"Install", function()
     for i = 0, 10 do prog = prog + 1 task.wait(0.005) end
     hm = "Installing assets"
     local assets = {}
-    for i,v in game:GetService('HttpService'):JSONDecode(game:HttpGet('https://github.com/starsdotspace/Installer/tree/main/assets')) do
+    for i,v in pairs(httpservice:JSONDecode(game:HttpGet('https://api.github.com/repos/starsdotspace/Installer/contents/assets'))) do
         if v.name then
             table.insert(assets, v.name)
         end
     end
-    for i,v in assets do
+    for _,v in pairs(assets) do
         if not isfile(`vape/assets/{v}`) then
-            writefile('vape/assets/'.. v, game:HttpGet('https://raw.githubusercontent.com/starsdotspace/Installer/refs/heads/main/Loader.lua'))
+            writefile('vape/assets/'.. v, game:HttpGet('https://raw.githubusercontent.com/starsdotspace/Installer/main/assets/'..v))
         end
     end
     WriteFiles("assets")
@@ -88,7 +89,7 @@ butt = Tab1:AddButton({"Install", function()
     	stat = "Error Code 0001: Files not downloaded"
     else
     	local str1 = readfile("vape/Loader.lua")
-    	local str2 = game:HttpGet("https://raw.githubusercontent.com/starsdotspace/Installer/refs/heads/main/Loader.lua")
+    	local str2 = game:HttpGet("https://raw.githubusercontent.com/starsdotspace/Installer/main/Loader.lua")
     	if str1 ~= str2 then
     		stat = "Error Code 0002: Files Outdated"
     	end
